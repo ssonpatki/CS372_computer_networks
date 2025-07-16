@@ -1,0 +1,566 @@
+# Module 2
+
+
+## Protocols and Layering
+
+### Internet Protocol Stack
+
+* **Layer 5: Application Layer** - supporting network applications (FTP, HTTP, DNS)
+
+* **Layer 4: Transport Layer** - provides logical communication between application layer processes running on different hosts (TCP, UDP)
+
+* **Layer 3: Network Layer** - routing of datagrams from source to destination (IP, NAT, BGP)
+
+* **Layer 2: Link Layer** - data transfer between neighboring network elements (PPP, Ethernet, 802.11)
+
+* **Layer 1: Physical Layer** - carries actual signals between devices (cable, wireless)
+
+* **WHY**
+    * Dealing wih complex systems
+    * Modularity and Abstraction
+    * Ease of Maintenance and Upgrades
+
+
+### Internet Stack End-to-End Transport
+
+![image info](./images/end_to_end_transport.png)
+
+*Note: Message is encapsulated at each layer*
+*Encapsulation: As a packet is being constructed and passed “down” to the next layer of the internet protocol stack, a new “header” is added* 
+
+
+### ISO/OSI reference model
+
+* ISO = International Organization for Standardization
+* OSI = Open Systems Interconnection
+* Note: ISO is a multinational dedicated to the agreement of standards worldwide and the OSI is the model which purpose is to show how to facilitate communication between different systems without requiring changes to the logic of the underlying hardware and software.
+
+Reference Model
+* **Layer 7: Application Layer**
+
+* **Layer 6: Presentation Layer** - allow applications to interpret meaning of data (encryption, compression, machine-specific conventions)
+
+* **Layer 5: Session Layer** - synchronization, checkpointing, recovery of data exchange
+
+* **Layer 4: Transport Layer** 
+
+* **Layer 3: Network Layer** 
+
+* **Layer 2: Link Layer** 
+
+* **Layer 1: Physical Layer**
+
+
+## Network Applications, Architecture, Protocols, and Services
+
+### Application Architectures
+
+**Client-Server Architecture**
+
+* Server:
+    * Always-on
+    * Fixed/known IP address
+    * Server "farms" and multi-threading for scaling (serves many clients simultaneously)
+
+* Clients:
+    * Communicate with server only
+    * Intermittently connected
+    * May have dynamic IP addresses
+    * Do not communicate directly with each other
+
+
+**Pure Peer-to-Peer (P2P) Architecture**
+
+* No always-on server
+* Arbitrary end systems communicatie directly
+* Peers are intermittently connected and might change IP addresses
+* Pros:
+    * Scalable
+    * Distributive
+* Cons:
+    * Difficult to manage
+    * Not secure
+
+
+**Hybrid of Client/Server and P2P**
+
+Users consult a central always-on server to get an address of one or more client peers. Once they get it, they will create a connection to their peers and exchange data.
+
+*Examples*
+* Skype
+* Instant messaging
+
+
+### Processes Communicating
+
+* *Client process: process that initates communication*
+* *Server process: process that waits to be contacted*
+* Process: a program running within a host
+    * Process inside a single host communicate using inter-process communication (manages by OS)
+    * Proccesses communicate by exchanging messages (managed by protocols)
+
+### Addressing Processes
+
+* To receive messages, process must have an *identifier*
+* Receiving host device has a unique IP address
+* **Identifier** consists of:
+    * IP address (host)
+    * Port number (process)
+* This identifier is called a socket or an endpoint
+
+### Sockets and Connections
+
+* Process sends/receives messages to/from its socket
+* A connection is a socket pair (4-tuple consisting of the client IP address, client port number, server IP address, and server port number) that uniquely identifies the two endpoints
+* Example Port Numbers
+    * 7: echo
+    * 11: systat
+    * 20,21: ftp
+    * 22: ssh
+    * 23: telnet
+    * 53: domain
+    * 80: web, http
+
+
+### Application Layer Protocols
+
+An application layer protocol defines:
+* Types of message exchanged (e.g., request, response)
+* Message syntax (what fields are included in a message; how fields are delineated)
+* Message semantics (meaning of information in fields)
+* Rules (for when and how processes send & respond to messages)
+
+Public-domain protocols:
+* defined in RFCs
+* allow for interoperability (e.g., HTTP, SMTP, etc)
+
+Proprietary protocols:
+* defined by the applications (e.g., Skype)
+
+
+### Transport Layer Services Required by Application Layer Protocols
+
+* **Data Integrity**: Some apps can tolerate some loss, other apps require 100% reliable data transfer
+* **Bandwidth**: Some apps require a certain amount of bandwidth to be "effective", other apps ("elastic apps") make use of whatever bandwidth they get
+* **Timing**: some apps (e.g., Internet telephony, interactive games) require low delay to be "effective"
+* **Security**: encryption, data integrity,...
+
+
+### What services do internet transport protocols provide
+
+**TCP Service**
+* connection-oriented
+* reliable transport
+* flow control
+* congestion control
+* does not provide: timing, minimum bandwidth guarantees
+
+**UDP services**
+* "unreliable" (best effort) data transfer
+* does not provide: connection setup, reliability, flow control, congestion control, timing, or bandwidth guarantee
+
+
+## Socket Programming
+
+Two Socket Types for Two Transport Services
+* UDP: "unreliable" datagram
+* TCP: the reliable byte stream
+
+**The Socket**: an application programming interface (API) that provides a set of functions and methods for applications to interact with the transport layer of the networking stack
+
+**Socket Programming with TCP**
+
+* client must contact server
+    * server process must first be running
+    * server must have created socket (door) that welcomes client's contract
+
+* client contacts server by 
+    * creating TCP socket specifying IP address, port number of server process
+    * when client creates socket: client TCP establishes connection to server TCP
+
+* when contacted by client, server TCP creates new socket for server process to communicate with that particular client
+    * allows server to talk with multiple clients
+    * source port numbers used to distinguish clients
+
+* Application viewpoint: TCP provides reliable, in-order byte-stream transfer ("pipe") between client and server
+
+
+## Web and the HTTP Protocol
+
+**The Application Level: Hypertext Transfer Protocol (HTTP)**
+
+### Web, URL, and HTTP (RFC 2616)
+
+* A web page can include various types of objects or resources. 
+* Objects are often referenced by a Uniform Resource Locator (URL)
+* URL: standardized way to specify location of resource on the internet
+
+### HTTP overview
+
+* HTTP: hypertext transfer protocol
+* client/server model
+    * client: browser requests, receives, and displays Web objects
+    * server: Web (Internet) server sends objects in response to requests
+
+**Uses TCP**
+* client initiates TCP connection (creates socket) to server, port 80
+* server accepts TCP connection from client
+* http messages (application-layer protocol messages) exchanged between browser (HTTP client) and Web server (HTTP server)
+* TCP connection closed
+
+**HTTP is "stateless"**
+* server maintains no information about past client requests
+* straightforward
+
+
+### HTTP Connections
+
+*Definition of RTT (round-trip time)*: time for a small packet to travel from client to server and back
+
+**Non-persistent HTTP**
+* TCP connection opened
+* at most one object is sent over a tcp connection
+* downloading multiple objects required multiple connections (connection is closed after client receives and must reopen to retrieve something else)
+* *Response Time*
+    * one RTT to initiate TCP connection
+    * one RTT for HTTP request and first few bytes of HTTP response to return
+    * total response time (per object) = 2RTT + transmit time (and overhead)
+
+
+**Persistent HTTP**
+
+*W/ Pipelining*
+* TCP connection opened to a server
+* multiple objects cab be sent over single TCP connection between client and server
+    * default in HTTP/1.1
+    * client sends requests as soon as it encounters a referenced object
+* TCP connection closed
+* Note: pipelining can suffer from head-of-line blocking (if one request experiences delays, all the others will also be delayed)
+* *Response Time*
+    * as little as one RTT for all the referenced objects
+    * total response time = 3RTT + N * transmit time
+
+*W/out Pipelining*
+* client issues new request only when previous response has been received
+* *Response Time*
+    * one RTT for each reference object
+    * total response time = RTT + N * (RTT + transmit time)
+
+
+**Two Types of HTTP messages**
+* request
+* response
+
+### HTTP request message: general format
+
+### Uploading form input
+
+URL method
+* uses GET method
+* input is uploaded in URL field of request line
+
+POST method
+* input is uploaded to server in entity body
+
+
+### HTTP response message: general format
+
+
+### HTTP response status codes
+Examples
+* 200 OK (request succeeded, requested object later in this message)
+* 301 Moved Permanently (requested object moved, new location specified later in this message)
+* 400 Bad Request (request message not understood by server)
+* 404 Not Found (requested document not found on this server)
+* 505 HTTP Version Not Supported
+
+
+## More HTTP, HTTP/2, Cookies, and Caching
+
+### The Evolution of HTTP Versions
+
+**HTTP 1.0**
+* Every request to the same server required a seperate TCP connection
+* The *Connection*: keep-alive header was used to indicate the intention to keep the TCP connection open for multiple requests
+
+**HTTP 1.1**
+* Persistent connections became the default, allowing multiple requests and responses to occur over the same connection - resulted in enhanced performance
+* Did not solve the head-of-line blocking issue (browser imposed limits on parallel requests)
+
+**HTTP 2.0**
+
+**HTTP 3.0**
+* Uses QUIC (Quick UDP Internet Connections) instead of TCP to address HOL (head-of-line) blocking at the transport layer
+
+
+### Client-server state: cookies
+
+**Four components of cookies**
+1. cookie header line of HTTP response message
+2. cookie header line in HTTP request message
+3. cookies file kept on user's host, managed by user's browser
+4. back-end database at Web site
+
+### Cookies
+
+**Keeping "state"**
+* protocol endpoints: maintain state at sender/receiver over multiple transactions
+* cookies: http messages carry state
+
+**Cookies can provide**
+* authorization
+* shopping cars
+* recommendations
+* user session state
+
+
+### Web caches (proxy server)
+
+*Goal: satisfy client request without involving origin server*
+
+* user's browser sends all HTTP requests to cache
+    * if object in cache: cache returns object
+    * else cache requests object from origin server, then returns object to client
+
+* using proxy servers help to:
+    * optimize web browsing performance
+    * reduce server load
+    * enhance the overall user experience
+
+* *Note*
+    * cache acts as both client and server
+    * cached objects have "expiration" date/time
+
+
+### Conditional GET
+
+*Goal: don't send object if cache has up-to-date cached version*
+
+* cache: specify date of cached copu in HTTP request
+    _if-modififed-since: < date >_
+* server: response contains no object if cached copy is up-to-date:
+    _HTTP/1.1 304 Not Modified_
+
+
+
+## File Transfer Protocol and the Email Protocols 
+*application layer protocols*
+
+### FTP
+
+**The file transfer protocol**
+
+* transfer file to/from remote host
+* client/server model
+    * client: that initiates transfer (to/from remote)
+    * server: remote host
+
+**Seperate control, data connections**
+
+* FTP client contacts FTP server to open TCP control connection
+* Client browses remote directory by sending commands over the TCP control connection
+* When server receives file transfer command, server opens 2nd TCP data connection (for file) to client
+* After transferring one file, server closes TCP data connection (TCP control stays on)
+* FTP server maintains "state"
+    * current directory, earlier authentication
+    * limit on concurrent connections
+
+
+### FTP commands, responses
+
+**Sample commands**
+* ls 
+* get filename
+* put filename
+* cd directory
+* help
+
+**Sample return codes**
+* 200 Command successful
+* 331 Username ok, password required
+* 425 Can't open data connection
+* 452 Error writing file
+* 550 Failed to open file
+
+### Electronic Mail (email)
+
+**Three Major Components**
+* user agent
+    * email client: compose, read, edit, sent
+    * outgoing, incoming messages stored on server
+* mail server
+    * mailbox contains incoming messages for user
+    * message queue of outgoing mail messages
+* SMTP (RFC 2821)
+    * = simple mail transfer protocol
+    * defines message transfer rules and formats between mail severs (client = sending mail; server = receiving mail)
+
+**SMTP**
+* application layer protocol uses TCP
+    * client-server application for sending mail
+    * reliable transfer
+    * default port is 25
+* command/response interaction 
+    * commands: plain text
+    * response: status code and phrase
+* messages must be in 7-bit ASCII
+
+
+### Message format (push)
+
+**Mail message format** 
+* SMTP: protocol for exchanging email messages
+* RFC 822 (standard text message format):
+    * header lines (entered by user, formatted by local user agent)
+        * to: 
+        * from: 
+        * subject:
+    * body  
+        * the "message" (ASCII characters only)
+
+**Multimedia message format**
+
+* MIME: multipurpose internet mail extension, RFC 2045, 2056
+    * allows SMTP to handle foreign characters and images
+    * additional lines in message header declare MIME content type
+ 
+### Mail access protocols (pull)
+*SMTP is a "push" protocol, thus we need "pull" protocols (mail access protocols)*
+
+1. Post Office Protocol (POP): authorization (agent <-> server) and download
+2. Internet Mail Access Protocol (IMAP): manipulation of stored messages on server, more complex
+3. HTTP: web browser mail services, e.g., gmail, Hotmail, Yahoo! Mail, etc
+
+**POP3**
+Process
+* An email is sent to reciever's mail server
+* User downloads the email
+* User manages the emails stored in the local device
+* Note: user cannot read email from other devices if the email has been removed (removal usually occurs after downloading) from the server
+
+Pros
+* popularity and simplicity
+* allows offline access
+* server storage saving
+* quick attachment access
+
+Cons
+* single device access
+* lack of message syncing
+* local space usage
+* security and corruption risks
+
+**IMAP**
+Process
+* An email is sent to receiver's mail server
+* Email stays on the server even when the user has read it
+* User can manage emails on the server from any other device
+
+Pros
+* multi-device access
+* centralized storage, unaffected by local machine failures
+* minimal local storage use
+
+Cons
+* synchronization overhead
+* dependency on internet connection
+* higher server storage cost
+* security concerns
+
+### Telnet to Send and Recieve Emails
+
+**Sending Emails**
+
+**Receiving Emails**
+
+**Important Notes**
+* Security
+* Authentication
+* Email providers
+* Testing
+
+
+## Domain Name Services (DNS) (application layer)
+
+*DNS: a hierarchical, distributed database that allows for the translation between domain names (oregonstate.edu) to IP addresses (128.192.35.172)*
+*TLD (top level domain): .com, .org, .edu, etc*
+
+Note:
+* **Hardware address**: every host connected to a network possesses a unique hardware address (assigned by the manufacturer of the network interface device; present at the physical layer)
+    * note: there are 16^12 unique network interface hardware addresses (ignoring reserved addresses)
+* **IP addresses**: numerical addresses utilized by routers and other networking devices (hierarchical and related to the location of the host or server within a network)
+    * note: there are 2^32 unique 32-bit IP addresses (ignoring reserved addresses)
+    * Internet addresses composed of 4 decimal numbers seperated by periods (possible values range from 0 to 255)
+
+
+### The need for naming
+
+* names are easier to remember
+* addresses can change underneath
+* name could map to multiple IP addresses
+* multiple names for the same address
+*DNS provides translation between symbolic names and IP addresses*
+
+
+### Structure of DNS names
+
+* each name consists of a sequence of alphanumeric components seperated by periods
+* examples: comcast.com, www.oregonstate.edu
+* note: there is not a correspondence between the DNS name's individual components and the fields of an IP address in dotted-decimal notation
+* Names are hierarchical
+    * most significant component on the right: Top-level domain (TLD)
+    * second from right is the domain name within the TLD (approved by a gloabl authority)
+    * left most component is the computer name
+
+**Key Points**
+* distributed database: implemented in hierarchy of many name servers
+* application-layer protocol: running at host, routers, and name servers to resolve names (address/name translations)
+* DNS Services
+    * hostname to IP address translation
+    * web server aliasing
+    * mail server aliasing
+    * load distribution
+
+**Example**
+Client wants IP address from www.amazon.com (1st approximation)
+* client queries root server to find .com DNS server
+* client queries .com DNS server to get amazon.com DNS server
+* client queries amazon.com DNS server to get IP address for www.amazon.com
+
+
+### DNS Records
+
+*DNS: distributed database storing resource records (RR)*
+*RR format: (name, value, type, ttl)*
+
+**type=A**
+* name = hostname
+* value = IP address
+
+**type=NS**
+* name = domain 
+* value = hostname of authoritative name server for this domain
+
+**type=CNAME**
+* name = alias name for some "canonical" name
+    * e.g., www.ibm.com is really servereast.backup2.ibm.com
+* value = canonical name
+
+**type=MX**
+* value = name of mailserver associated with name
+
+**ttl** = < # of seconds to remain in cache >
+
+### DNS protocol, messages
+
+* query and reply messages, both with same message format
+
+Message header
+* identificatoin: 16 bit # for query, reply to query uses same #
+* flags:
+    * query or reply
+    * recursion desired
+    * recursion avaliable
+    * reply is authoritative
+
+*Note: all multi-byte numerical values must be in big-endian order (network order)*
