@@ -2,3 +2,479 @@
 
 ## The Network Layer and Network Types
 
+*Review*
+* Transport Layer: logical communication between processes
+    * relies on network layer services
+    * transport-layer unit called a segment
+* Network Layer: logical communication between hosts
+    * relies on link layer services
+    * network layer unit called a datagram
+
+### Network layer services and protocols
+
+**Transport segment from sending to receiving host**
+Sender side:
+* gets segment from transport layer
+* encapsulates segments into datagrams/network layer units
+* passes to link layer
+
+Receiver side:
+* delivers segments to transport layer
+
+*Note: network layer protocols are in every internet device (hosts/end systems, routers)*
+
+**Routers**
+* examine header fields in all IP datagrams
+* moves datagrams from input ports to output ports to transfer datagrams along end-end path
+
+
+### Network Layer Functions
+
+*Routing*: determine route taken by packets from source to destination
+
+*Forwarding*: transfer of a packet from an incoming link to an outgoing link within a single router
+
+*Connection Setup*: in Virtual-Circuit Networks
+
+
+### Two Broad Classes of Computer Networks
+*Note: network layer can only offer one or the other*
+
+* virtual-circuit network: provides network-layer *connection* service
+    * Pros: ensures sequential delivery and reliability
+    * Cons: additional overhead and/or connection time
+* datagram network: provides network-layer *connectionless* service
+    * Pros: more effective, allows for greater flexibility
+    * Cons: no guaranteed delivery or reliability
+
+
+### Virtual Circuit Networks (VCs)
+*Source-to-destination path behaves much like a telephone circuit*
+
+VCs consist of:
+* pre-defined path
+* VC identifier
+* forwarding circuit at each intermediate router
+
+Pros:
+* guaranteed bandwidth
+
+Requirements:
+* Call setup
+* VC identifier
+* Maintain state for each VC
+* Allocate resources for each VC
+
+**Forwarding Table**
+* maintains connection-state information for each virtual circuit
+* Note: as packets travel a VC, they are stamped with a VC identifier, and at each router, the VC identifer may be replaced with a new identifier based on the routing decisions
+
+
+
+### Datagram Networks
+
+* no call setup at network layer
+* no state of end-to-end connections is kept in routers
+* packets forwarded using destination host address
+
+**Forwarding Table**
+* no end-to-end virtual circuit
+* only incoming destination address range and outgoing link are needed in the forwarding table 
+* prefixes in the table are used to compare packet IP addresses; longest match in the table is chosen
+
+
+### Summary
+
+* network layer protocols run everywhere in the internet
+
+* “first hop” router is the first router a datagram is passed to from the source host on the path to the destination host
+
+* purpose of network layer: to ensure logical communication from host to host. In a more nuts-and-bolts view, the purpose is to determine a path from source to destination that a datagram can take, and to move it on that path (within the network layer)
+
+* Routing: the process of determining the path a datagram will take from source to destination in the internet
+
+* Forwarding: the process within a router of moving a datagram from an input port to the appropriate output port, so that it may take the next step in its journey from source to destination
+
+* Virtual-circuit network: A connection-oriented network layer implies a virtual-circuit network. This type of network has a call setup at the beginning of a host-to-host connection, and from that point the state of the connection is preserved in all routers from source to destination, until the call is taken down. 
+    * Advantages: 
+        * guaranteed bandwidth and timing (jitter)
+        * ideal for streaming audio/video.
+
+* Datagram network: A connectionless network layer implies a datagram network. The internet is a datagram network. 
+    * Advantages:
+        * FAR less overhead
+        * Each network need not preserve the state for every host-to-host communication passing through it. With the billions of devices on the internet, this would be terribly implausible regardless of the rapid development of storage space and access times.
+
+* How do routers know which output port an IP address is located at: The forwarding table in a datagram network’s router matches ranges of addresses to output ports, rather than matching each address to its own output port. By doing this, it saves tremendously on time and required storage/access capability.
+
+
+## The Network Layer - Hardware Functions
+
+### Router Architecture Overview
+*Two key router functions: routing and forwarding*
+
+**Routing**: determines the corret output port for each incoming packet, guided by forwarding tables that map datagram destinations to output ports
+
+**Forwarding** (data movement): transmitting data packets from input port to appropriate output port based on information from forwarding table
+
+*Traditionally, routing and forwarding occured within the router, but with Software Defined Networking (SND), the responsibility of running routing algorithms have sometimes been shifted to external computers*
+
+
+### Input Port Functions
+
+![image info](./images/input_port_functions.png)
+
+Physical layer:
+* bit-level reception
+
+Data link layer:
+* e.g., ethernet
+
+Network layer (in):
+* lookup: given datagram destination, lookup output port using forwarding table in input port memory
+* forwarding: forward to appropriate output port
+* queuing: if datagrams arrive faster than forwarding rate into switch fabric
+
+
+### Input Port Queuing
+
+* Fabric slower than combined input ports
+    * queuing may occur
+    * output port contention
+    * Head-of-line blocking
+* Queuing delay and loss due to input buffer overflow
+
+### Switching Fabric Functions
+
+* transfer packet from input link to appropriate output link
+* three major types of switching fabrics: memory, bus, crossbar
+
+![image info](./images/switching_fabric.png)
+
+
+### Output Port Functions
+
+* store datagams received from the switching fabric
+* perform reverse data link and physical layer functions before transmitting packets
+
+### Output Port Queuing
+
+* output link's transmission rate slower than switching fabric
+    * queueing may occur
+    * overloading of individual output port
+* queueing delay and loss due to output port buffer overflow
+
+
+### Datagram Forwarding Table
+
+*tables map destination address ranges to output port links*
+
+* Reminder: IP address is a 32-bit number represented in binary
+* Address ranges in forwarding table are determined using longest prefix matching (IP address compared to prefix; longest match prefered)
+
+
+### Prefix Matching
+Prefix Match | Port
+
+10001100 00011011 01011101 | 0
+
+10001100 00011011 01011101 000 | 1
+
+10001100 00011011 01011101 01 |  2
+
+10001100 00011011 01011110 00100 | 3
+
+Default | 4
+
+a. 140.27.93.25 : Port#1
+b. 140.27.94.39 : Port#3
+c. 140.27.95.32 : Port#4
+d. 140.27.93.98 : Port#2
+e. 140.27.93.156 : Port#0
+
+
+### Summary
+
+* Routing algorithm: Finds a path from a router to destination, and selecting it appropriately. 
+    * Result of the algorithm is used to construct the router forwarding table (or routing table), which is stored in the router.
+
+
+
+## IP Header and Address Format
+
+### Network Layer: Internet
+
+*Internet Protocol (IP): the network layer protocol for the internet*
+
+*IP datagrams: data transmitted over the internet using IP (format defined by RFC 791)*
+
+Two Parts of IP:
+* header: contains addressing and control information
+* payload: contains the actual data being transmitted
+
+IP is:
+* simple
+* connectionless
+* unreliable
+* best-effort
+
+
+### IP (Version 4) Datagram Header
+
+Fields in an IP header include: 
+
+1. Version field (4 bits) - indicates version of the IP datagram
+
+2. Internet Header Length (IHL) (4 bits) - specifies the number of 32-bit words in the IPv4 header (including any options).
+    * max of 15 32-bit words (60 bytes); normal value = 5 or 20 bytes w/ no options present
+
+3. Differentiated Services (DS) & Explicit Congestion Notificatioin (ECN)
+    * together = 8 bits; DNS = 6, ECN = 2
+
+4. Total Length Field (16-bit) - the total length of the IPv4 datagram in bytes (including header and payload)
+    * min = 20 bytes (only header); max = 65,535 bytes
+
+5. Identification, Flags, & Fragment Offset - used for fragmenting large datagrams
+    * Identification - uniquely identifies each datagram
+    * Flags & Fragment Offset - help in reassembling the fragments
+
+6. Time-to-Live (TTL) (8-bit) - limits the number of routers a datagram can pass through
+    * initialized by sender & decremented by routers
+    * TTL prevents routing loops by discarding the datagram when the TTL reaches 0
+
+7. Upper Layer Protocol (8-bit) - indicates the type of data in the payload portion of the datagram (common values being 17 for UDP and 6 for TCP)
+
+8. Header Checksum (16-bit) - used for error checking the header only (changes with each router due to the TTL decrement)
+
+9. Source & Destination (32-bit/each) - specifies the sender and recipient of the datagram
+
+10. Optional fields - used for recording the routes and timestamps
+
+11. Datagram data
+    * encapsulated UDP segment from the transport layer, including the segment header
+
+**Overhead**
+* 20 bytes of TCP
+* 20 bytes of IP
+* total = 40 bytes + application layer overhead for TCP + IP
+
+
+### Internet Addresses
+
+*key aspect of virtual network is a single, uniform address format*
+
+* address format must be independent of any particular hardware address format
+
+**IPv4 Address Notation**
+
+* common "dotted decimal" (range: [0.0.0.0 ... 255.255.255.255])
+* IP address is just a 32-bit number (same internally, regardless of external representation)
+    * dotted decimal: 0.0.0.0 ... 255.255.255.255
+    * hexadecimal - range: [00000000 ... FFFFFFFF] 
+        * e.g., 128.253.40.28 == 80 FD 28 1C
+    * binary form - range: [(32)0s ... (32)1s] == [000000.. ... 11111111..]
+        * e.g., 128.253.40.28 == 100000000 11111101 00101000 00011100
+    * ordinary decimal - range: [0 ... 4294967295]
+        * e.g., 128.253.40.28 == 2164074524
+    
+
+### IP Address Hierarchy
+
+* every ISP (internet service provider) network in the internet is assigned a network address that is unique within the internet
+* every host in a specific network is assigned a host number that is unique within that network
+* host's IP address is the combination of the network address and host address
+* address format enables efficient routing (longest prefix matching)
+
+
+### IP Address Assignment
+
+* ISP network addresses are unique (assigned by Internet Corporation for Assigned Names and Numbers - ICANN)
+* host addresses may be duplicated on different networks (assigned by network through admin or DHCP)
+* the combination of network address and host number is unique in the entire internet
+    * assignment of ISP network addresses must be coordinated globally
+    * assignment of sub-nets and host number can be managed locally
+
+
+
+### Summary
+
+* theoretically, max number of bytes of a payload (that can be transmitted in an IP datagram carrying a TCP segment): 65495 bytes
+    * “length” field of the IP datagram header is 16 bits
+    * maximum datagram size is 65,535 bytes
+    * TCP header and the IP datagram header are each at least 20 bytes. 65535 – 40 = 65495
+
+* conversion from binary to dotted decimal
+    10000000 11000001 00000100 01110000 == 128.193.4.112
+
+* conversion from binary to hex
+    10000000 11000001 00000100 01110000 = 80 C1 04 70
+
+* using IP address, assign bits to network part and host part
+    * 128.145.22.44 / 28 
+        Network part: 28 bits (directly from above) 
+        Host part: 32 – 28 = 4 bits
+    * 142.33.54.71 / 26
+        Network part: 26 bits (directly from above) 
+        Host part: 32 – 26 = 6 bits
+    * 193.111.54.4 / 16
+        Network part: 16 bits (directly from above) 
+        Host part: 32 – 16 = 16 bits
+
+* organization that manages IP network addresses: ICANN (Internet Corporation for Assigned Names and Numbers)
+
+
+## IP Datagram Fragmentation
+
+### Frame Encapsulation
+
+* when datagram transits a physical network, it is encapsulated in a frame appropriate to that network
+    * hardware frame encapsulation/un-encapsulation at the link layer
+    * hardware frame formats may differ
+* routers in the datagram's pat will:
+    * un-encapsulate it from the frame (link layer)
+    * process the datagram to determine the next hop (network layer)
+    * re-encapsulate it in an outgoing frame appropriate for the next-hop network (link layer)
+
+*Maximum transmission unit (MTU): definition of the maximum size of the frame data*
+
+*To pass datagrams through network technologies with different MTUs: fragment datagrams into smaller datagrams and reassemble them later*
+
+### Choosing Datagram Size
+
+* IP datagrams can be much larger than the hardware MTUs (IP total length max = 65,535 bytes)
+* Typical hardware frames: 
+    * ethernet: 1500 bytes
+    * token ring: 2048 or 4096 bytes
+* Technique for datagram size: limit datagram size to smallest MTU of any known network
+
+
+### Datagram Fragmentation
+
+*IPv4 will fragment datagrams*
+
+How it's done:
+* router will detect if an inbound datagram is larger than the outbound network MTU
+* if larger: necessary to split datagram into fragments that can traverse the outgoing link (where each fragment must be smaller than the MTU of the outbound network)
+
+The fragments:
+* each fragment is an independent datagram
+* each includes the usual IP header fields (including Identifier of OG datagram, 3-bit Flags, 13-bit Fragment Offset)
+    * note: if "more fragments" flag is set or if offest is non-zero, then datagram is a fragment
+
+
+### Sub-fragments (fragmenting a fragment)
+
+* fragments may encounter subsequent network with even smaller MTU
+* router fragments the fragment to fit local MTU
+* resulting sub-fragments look just like original datagrams
+* re-assembly is entirely the responsibility of the protocol on the destination host
+
+### Datagram Reassembly
+
+* *IPv4 datagrams are always reassembled at the destination host*
+* reasons:
+    * The MTU’s over the entire route may vary, which could cause fragmentation again
+    * It is more efficient to keep the data fragmented until it reaches its destination
+    * Routers already do a lot without adding the burden of reassembly
+
+**Reassembly Process**
+* Identification field in each fragment matches original datagram
+    * fragments from different datagrams can arrive out of order and still be sorted out 
+* Flags bit identifies fragment containing end of data from original datagram
+* Fragment offset specifies re-assembly order (counted in 8-byte blocks)
+
+
+### Fragment Loss
+
+* IP does not guarantee datagram delivery, so fragments may be lost
+
+**Process**
+* Destination
+    * sets timer with first fragment
+    * if timer expires before all fragments arrive
+        * one or more fragments assumed lost
+        * destination drops entire original datagram
+* Source
+    * assumed to retransmit entier original datagram
+
+*Explanation for All-of-nothing Behavior*
+* no mechanism for a receiver to tell a sender which fragments arrived
+* sender does not know about any fragmentation that happened along the way
+
+
+### Summary
+
+* an MTU: the maximum transmission unit, in terms of bytes of data, for a specific piece of networking hardware
+* a path MTU: minimum MTU on the entire path from source to destination. If a datagram is smaller than the path MTU, there will be no fragmentation
+
+
+
+## IP CIDR Addressing and Subnets
+
+*Remember: IP addressses contain both a network address and a host number*
+
+**Review**
+
+* host (end system): connects to the network via a single link
+    * uses the link to send a datagram or data packet
+* interface: the point where the host connects to the link 
+    * all interfaces have a unique IP address
+* router: connects multiple links
+    * 2 or more links allow it to forward datagrams from one link to another
+    * each link connected to a router also has an interface
+
+
+### Subnets
+
+*Subnet: a network where all interfaces have the same IP address prefix and can communicate with each other without using a router*
+
+**Determining a Subnet**
+1. detach each interface from its host or router, creating "islands" of isolated networks
+2. each isolated network is a subnet
+
+
+**Creating Subnets**
+* ISP gets a "block" of addresses from ICANN
+* ISP can create subnets
+
+
+### Extracting the Network Address
+
+* routers need network addresses
+    * first /x bits of IP address is often called the prefix
+    * netmask is all 1's in the first x bits, and all zeros in the rest
+* routers can use network address for longest prefix math
+
+
+### Extracting the Host Address
+
+* local admin needs host number for address with /x
+    * the last (32 - x) bits of IP address if often called the suffix
+    * hostmask is all zeros in the first x bits, and all 1's in the rest of the bits
+
+### Subnet Notation
+
+* same IP address, but in a /22 subnet
+
+
+### CIDR (Classless Inter-Domain Routing)
+
+* CIDR includes specification for number of bits to use for the netmask
+
+### Routing information
+
+* sending host puts destination internet address into datagram
+    * destination address in IP datagram is always ultimate destination
+* address mask: defines how many bits of address are in prefix
+    * /x defines how much of address used to identify network
+* router applies mask to destination address to obtain the network address
+* routing table relates network address to next-hop address
+    * router forwards datagram to next-hop address
+* within the final network, the host masks finds the specific host
+
+
+## Assigning IP Addresses
+
+### DHCP 
+
+* DHCP: an application layer protocol, utilized in a client-server environment
