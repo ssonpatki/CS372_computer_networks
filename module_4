@@ -475,6 +475,51 @@ The fragments:
 
 ## Assigning IP Addresses
 
+### Host IP Address Assignment
+
+*System admin can hard-code IP addresses for each host or use DHCP*
+
+
 ### DHCP 
 
 * DHCP: an application layer protocol, utilized in a client-server environment
+* DHCP allows hosts to dynamically lease IP address from a server when joining the network 
+* IP address can then be reused by other hosts if released or renewed while host is still connected
+
+
+**DHCP Client-Server Model**
+
+* typically, DHCP server will be co-located in router, serving all subnets to which router is attached
+
+**Dynamic Host Configuration Protocol**
+
+* arriving host has no IP address (broadcasts "DHCP discover" with hardware address)
+* DHCP server responds to host hardware address ("DHCP offer")
+* host requests IP address ("DHCP request")
+* DHCP server sends complete IP address ("DHCP acknowledgement")
+    * records IP/hardware address in local server IP table
+    * complete IP = the network address and host number
+* DHCP also returns:
+    * address of first-hop router for client
+    * name and IP address of DNS server
+    * netmask
+
+
+
+### IP Address Allocation
+
+*Addresses in internet not used efficiently - less than 20% of possible addresses are actually assigned*
+
+Possible Solutions to Exhaustion of Address Space 
+* IP address sharing: multiple hosts can use one IP address with Network Address Translation
+* IPv6
+
+
+### Summary
+
+* Purpose of DHCP: to streamline the connection of new devices to a network. Rather than having a sysadmin hard-code a relationship between hardware (MAC) addresses and IP- addresses, a new device can enter a network and automatically obtain an IP address valid in the network.
+
+* Reason for DHCP broadcast its hardware address: 
+    * arriving DHCP client has no IP address
+    * broadcasting its hardware address to the entire network, it is received by the DHCP server
+    * DHCP server can then offer an IP address lease to the client, by (again) broadcasting
