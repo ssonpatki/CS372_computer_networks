@@ -6,7 +6,7 @@
 #include <algorithm> //for reverse
 
 //really should split definitions from implementation, but being lazy right now...
-#include "Segment.cpp"
+#include "segment.cpp"
 
 using std::vector;
 using std::cout;

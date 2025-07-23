@@ -50,8 +50,8 @@ class RDTLayer{
                 We could use pointers all over, but since we do not do any none or nullptr checking
                 or do any pointer manipulation anyway...
         */
-        optional<UnreliableChannel> sendChannel;
-        optional<UnreliableChannel> receiveChannel;
+        optional<UnreliableChannel*> sendChannel;
+        optional<UnreliableChannel*> receiveChannel;
         string dataToSend;
         int currentIteration;       //Use this for segment "timeouts"
         int countSegmentTimeouts; //use this to track how many segments actually timeout
@@ -98,8 +98,8 @@ class RDTLayer{
          * 
          * 
          **/
-        void setSendChannel(UnreliableChannel channel){
-            this->sendChannel = channel;
+        void setSendChannel(UnreliableChannel& channel){
+            this->sendChannel = &channel;
         }
 
         /**
@@ -110,8 +110,8 @@ class RDTLayer{
          * 
          * 
          **/
-        void setReceiveChannel(UnreliableChannel channel){
-            this->receiveChannel = channel;
+        void setReceiveChannel(UnreliableChannel& channel){
+            this->receiveChannel = &channel;
         }
 
         /**
@@ -141,7 +141,7 @@ class RDTLayer{
              * Add code to this function as needed!                     *
              ************************************************************/
             
-            cout << "getDataReceived(): Complete this..." << endl;
+            //cout << "getDataReceived(): Complete this..." << endl;
 
             string received = "";   // empty string to store data received
             
@@ -194,7 +194,7 @@ class RDTLayer{
             Segment segmentSend;
             
             /**************************************************/
-            cout << "processSend(): Complete this..." << endl;
+            //cout << "processSend(): Complete this..." << endl;
             /************************************************************
              * Add code to this function as needed!
              * 
@@ -208,8 +208,8 @@ class RDTLayer{
              * The seqnum is the sequence number for the segment (in character number, not bytes)
              ************************************************************/
 
-            int seqnum = 0;
-            string data = "x";
+
+            cout << "Length of Receive Unacked Packets List: 0" << endl;
 
             // send new seg of data only if
                 // if # of unacknowledged chars < window size 
@@ -217,16 +217,15 @@ class RDTLayer{
             int windowSize = this->oldSeqNum + this->FLOW_CONTROL_WIN_SIZE;
             int lengthDataToSend = (int)this->dataToSend.length();
             if (this->nextSeqNum < windowSize && this->nextSeqNum < lengthDataToSend) {
-                seqnum = this->nextSeqNum;  // set seqnum to the char idx to send
+                int seqnum = this->nextSeqNum;  // set seqnum to the char idx to send
                 // segSize = how many char to send
                 int segSize = std::min(this->DATA_LENGTH, lengthDataToSend - seqnum);
-                data = this->dataToSend.substr(seqnum, segSize);    // seperate payload/substring
+                string data = this->dataToSend.substr(seqnum, segSize);    // seperate payload/substring
                 
                 // track sent segm and time for retransmission
                 this->sentSeg[seqnum] = Segment();
                 this->sentSeg[seqnum].setData(seqnum, data);
                 this->sentTime[seqnum] = this->currentIteration;
-
                 this->sentLengths[seqnum] = segSize;    // tack seg length for retransmission
                 this->nextSeqNum += segSize;    // increment nextSeqNum by segSize
 
@@ -236,9 +235,11 @@ class RDTLayer{
                 cout << "Sending segment: " << segmentSend.to_string() << endl;
 
                 //use the unreliable sendChannel to send the segment
-                this->sendChannel->send(segmentSend);
+                (*this->sendChannel)->send(segmentSend);
 
             }
+
+            cout << "Length of Sent Unacked Packets List: " << this->sentSeg.size() << endl;
 
             // check for timeout (possible retransmission required)
             // For each [segNum, segTime] pair in the recorded sentTimes
@@ -258,7 +259,7 @@ class RDTLayer{
                         // check if segment (seq) was saved in sentSeg
                         if (this->sentSeg.count(seq)) {
                             Segment& toResend = this->sentSeg[seq]; // get reference to seg at idx=[seq]
-                            this->sendChannel->send(toResend);  // use UnreliableChannel object to resend the seg
+                            (*this->sendChannel)->send(toResend);  // use UnreliableChannel object to resend the seg
                             this->sentTime[seq] = this->currentIteration;   // update timestamp for seqnum
 
                             cout << "Resent segment: " << toResend.to_string() << endl; // used for [debugging]
@@ -286,7 +287,9 @@ class RDTLayer{
             Segment segmentAck; // Segment acknowledging packet(s) received
 
             //This call returns a list of incoming segments (see Segment class)...
-            vector<Segment> listIncommingSegments = receiveChannel->receive();
+            vector<Segment> listIncommingSegments = (*receiveChannel)->receive();
+
+            cout << "Length of Receieved Unacked Packets List: " << listIncommingSegments.size() << endl;
 
             /*************************************************
              * What segments have been received?
@@ -298,7 +301,7 @@ class RDTLayer{
              * How do you respond to what you have received?
              * How can you tell data segments apart from ack segments?
              *************************************************/
-            cout << "processReceiveAndSendResponse(): Complete this..." << endl;
+            //cout << "processReceiveAndSendResponse(): Complete this..." << endl;
 
             // process each segment received
             for (Segment& seg : listIncommingSegments) {
@@ -312,19 +315,33 @@ class RDTLayer{
 
                 // process data seg (ack == -1)
                 if (ackNum == -1) {
-                    // parse seqnum and data from seg
+                    // get values from to_string()
                     string segString = seg.to_string();
+                    int seqNum = -1;
+                    string payload = "";
                     size_t seqStart = segString.find("seq: ") + 5;
                     size_t seqEnd = segString.find(",", seqStart);
-                    int seqNum = stoi(segString.substr(seqStart, seqEnd - seqStart));
+                    size_t dataStart = segString.find("data: ");
 
-                    size_t dataStart = segString.find("data: ") + 6;
-                    string payload = segString.substr(dataStart);
+                    if (seqStart != string::npos && seqEnd != string::npos && dataStart != string::npos) {
+                        try {
+                            seqNum = std::stoi(segString.substr(seqStart, seqEnd - seqStart));
+                            payload = segString.substr(dataStart + 6);
+                        } catch (...) {
+                            cout << "Error parsing segment string: " << segString << endl;
+                            continue;
+                        }
+                    } else {
+                        cout << "Malformed segment string: " << segString << endl;
+                        continue;
+                    }
 
                     // buffer seg if not received
                     if (this->buffer.count(seqNum) == 0) {
                         this->buffer[seqNum] = payload;
-                        cout << "Buffered seg: " << seg.to_string() << endl;
+                        cout << "Buffered segment: " << seg.to_string() << endl;
+                    } else {
+                        cout << "Duplicate segment dropped: " << seg.to_string() << endl;
                     }
 
                     while (this->buffer.count(this->expectedSeqNum)) {
@@ -365,7 +382,7 @@ class RDTLayer{
                     cout << "Sending ack: " << segmentAck.to_string() << endl;
 
                     // Use the Unreliable sendChannel to send the ack packet
-                    this->sendChannel->send(segmentAck);
+                    (*this->sendChannel)->send(segmentAck);
                     this->lastAckSent = this->expectedSeqNum;
                 } else {
                     cout << "No new ACK; last ACK sent is: " << this->lastAckSent << endl;
