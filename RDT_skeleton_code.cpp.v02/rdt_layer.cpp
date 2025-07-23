@@ -1,3 +1,13 @@
+/*
+Utilized Sources:
+    Kurose and Ross, Computer Networking: A Top-Down Approach, 8th Edition, Pearson
+    ChatGPT to better understand the skeleton code and for explanations on error messages
+    Geeks for Geeks (for better understanding RDT):
+        1. Reliable Data Transfer (RDT) 1.0
+        2. Reliable Data Transfer (RDT) 2.0
+        3. Reliable Data Transfer (RDT) 3.0
+*/
+
 #pragma once
 
 #include <iostream>
@@ -311,11 +321,11 @@ class RDTLayer{
                     continue;
                 }
 
-                int ackNum = seg.getAck();
+                int ackNum = seg.getAck();  // get ack num for seg
 
-                // process data seg (ack == -1)
+                // process data seg (ack == -1 when seg is data seg)
                 if (ackNum == -1) {
-                    // get values from to_string()
+                    // get specific values from seg.to_string()
                     string segString = seg.to_string();
                     int seqNum = -1;
                     string payload = "";
@@ -323,6 +333,7 @@ class RDTLayer{
                     size_t seqEnd = segString.find(",", seqStart);
                     size_t dataStart = segString.find("data: ");
 
+                    // if fields are found in string (!= npos means != not found)
                     if (seqStart != string::npos && seqEnd != string::npos && dataStart != string::npos) {
                         try {
                             seqNum = std::stoi(segString.substr(seqStart, seqEnd - seqStart));
@@ -336,7 +347,7 @@ class RDTLayer{
                         continue;
                     }
 
-                    // buffer seg if not received
+                    // buffer seg if not received, add segment to buffer
                     if (this->buffer.count(seqNum) == 0) {
                         this->buffer[seqNum] = payload;
                         cout << "Buffered segment: " << seg.to_string() << endl;
@@ -344,6 +355,7 @@ class RDTLayer{
                         cout << "Duplicate segment dropped: " << seg.to_string() << endl;
                     }
 
+                    // update expectedSeqNum forward through buffer
                     while (this->buffer.count(this->expectedSeqNum)) {
                         this->expectedSeqNum += this->buffer[this->expectedSeqNum].length();
                     }
@@ -356,6 +368,7 @@ class RDTLayer{
                         this->oldSeqNum = ackNum;
                         
                         // loop using iterator (traverse sentSeg container)
+                        // remove all seg that have been cumulatively acked
                         for (auto it = this->sentSeg.begin(); it != this->sentSeg.end(); ) {
                             if (it->first < ackNum) {
                                 this->sentTime.erase(it->first);
@@ -368,7 +381,8 @@ class RDTLayer{
                     }
 
                 }
-
+                
+                // send ack (new data received in order, then prepare and send ACK)
                 if (this->expectedSeqNum > this->lastAckSent) {
                     /*************************************************
                      * Somewhere in here you will be setting the contents of the ack segments to send.
