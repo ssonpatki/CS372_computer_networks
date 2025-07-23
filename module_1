@@ -348,7 +348,8 @@ Prob[(B active && A, C not)] + Prob[(C active && A, B not)]
 ### REVIEW - MODULE 1
 
 * What is the definition of a Network? Of the Internet?
-* What devices reside on the network edge? In the network Core?
+* What devices reside on the network edge? Laptops, Tablets, Printers, Smart TVs, Desktop Computers
+* In the network Core?
 * What are some of the key technologies and concepts used in the Internet?
 * You should be able to calculate the packet delay between two or more network nodes.
 * How is data transferred with circuit and packet switching?
