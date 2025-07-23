@@ -6,6 +6,9 @@ Utilized Sources:
         1. Reliable Data Transfer (RDT) 1.0
         2. Reliable Data Transfer (RDT) 2.0
         3. Reliable Data Transfer (RDT) 3.0
+
+Note: 
+    Receiving warning for #pragma once, but should not hinder program execution
 */
 
 #pragma once
