@@ -63,7 +63,7 @@ class Segment {
             this->checksum = calc_checksum(str);
         }
 
-        int getAck(){
+        int getAck() const{
             return this->acknum;
         }
 
@@ -83,7 +83,7 @@ class Segment {
             return this->startDelayIteration;
         }
 
-        string to_string(){
+        string to_string() const{
             //Using string stream instead of a bunch of manual casting.
             ostringstream oss;
             oss << "seq: " << this->seqnum << ", ack: " << this->acknum << ", data: " << this->payload;
@@ -125,5 +125,8 @@ class Segment {
 /**
  * Segment helper non-member functions
  **/
-inline bool operator==(const Segment& lhs, const Segment& rhs){ return lhs == rhs; }
+inline bool operator==(const Segment& lhs, const Segment& rhs){ 
+    return lhs.to_string() == rhs.to_string() &&
+    lhs.getAck() == rhs.getAck(); 
+}
 inline bool operator!=(const Segment& lhs, const Segment& rhs){return !operator==(lhs,rhs);}
