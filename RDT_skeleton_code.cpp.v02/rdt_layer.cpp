@@ -275,7 +275,7 @@ class RDTLayer{
                             (*this->sendChannel)->send(toResend);  // use UnreliableChannel object to resend the seg
                             this->sentTime[seq] = this->currentIteration;   // update timestamp for seqnum
 
-                            cout << "Resent segment: " << toResend.to_string() << endl; // used for [debugging]
+                            cout << "Retransmitting segment w/ Go-Back-N: " << toResend.to_string() << endl; // used for [debugging]
 
                             seq += this->sentLengths[seq]; // increment seq pointer to next segment
                         } else {
@@ -320,7 +320,7 @@ class RDTLayer{
             for (Segment& seg : listIncommingSegments) {
                 // check for segment corruption
                 if (!seg.checkChecksum()) {
-                    cout << "Drop corrupted segment: " << seg.to_string() << endl;
+                    cout << "Drop corrupted packet with seq#: " << seg.to_string() << endl;
                     continue;
                 }
 
