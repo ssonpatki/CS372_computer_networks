@@ -50,8 +50,8 @@ int main(int argc, char **argv){
         "JFK - September 12, 1962\r\n";
     string longParagraph = oss.str();
 
-    dataToSend = shortSentence;
-    //dataToSend = longParagraph;
+    //dataToSend = shortSentence;
+    dataToSend = longParagraph;
 
     RDTLayer client;
     RDTLayer server;
@@ -59,10 +59,10 @@ int main(int argc, char **argv){
     //Start with a reliable channel (all flags false)
     //As you create your rdt algorithm for send and receive, turn these on.
 
-    bool outOfOrder = false;
-    bool dropPackets = false;
-    bool delayPackets = false;
-    bool dataErrors = false;
+    bool outOfOrder = true;
+    bool dropPackets = true;
+    bool delayPackets = true;
+    bool dataErrors = true;
 
     //Create unreliable communication channels
     UnreliableChannel clientToServerChannel(outOfOrder,dropPackets,delayPackets,dataErrors);

@@ -99,7 +99,7 @@ class RDTLayer{
             this->timeout = 5;
             this->expectedSeqNum = 0;
             this->DATA_LENGTH = 10;
-            this->FLOW_CONTROL_WIN_SIZE = 50;
+            this->FLOW_CONTROL_WIN_SIZE = 75;
             this->lastAckSent = -1;
         }
 
@@ -221,7 +221,11 @@ class RDTLayer{
              * The seqnum is the sequence number for the segment (in character number, not bytes)
              ************************************************************/
 
-
+            if (!this->sendChannel.has_value()) {
+                cout << "Send channel has not been set" << endl;
+                return;
+            }
+            
             cout << "Length of Receive Unacked Packets List: 0" << endl;
 
             // send new seg of data only if
@@ -254,17 +258,24 @@ class RDTLayer{
 
             cout << "Length of Sent Unacked Packets List: " << this->sentSeg.size() << endl;
 
+            // don't alter sentTime map during iterations
+            vector<int> keysCheck;
+            for (const auto& [seqNum, segTime]: this->sentTime) {
+                keysCheck.push_back(seqNum);
+            }
+
             // check for timeout (possible retransmission required)
             // For each [segNum, segTime] pair in the recorded sentTimes
                 // iterate though the buffer (hash table) in key order
             // note: using const auto& to auto detect the variable type and to avoid copying segments
-            for (const auto& [seqNum, segTime]: this->sentTime) {   
+            for (int seqNum: keysCheck) {   
                 // check if seg is not acknowledged && sender waited too long for ACK (timeout)
                     // then retransmission required
+                int segTime = this->sentTime[seqNum];
                 int timeWaited = this->currentIteration - segTime;
                 if (seqNum >= this->oldSeqNum && seqNum < this->nextSeqNum && timeWaited > this->timeout) {
                     // timeout detected - retransmit
-                    cout << "Timeout detected, retransmitting the following segment" << this->oldSeqNum << endl;    // used for [debugging]
+                    cout << "Timeout detected, retransmitting the following segment: " << this->oldSeqNum << endl;    // used for [debugging]
                     this->countSegmentTimeouts++;
 
                     // resent unacknowledged segs starting 
@@ -277,7 +288,13 @@ class RDTLayer{
 
                             cout << "Resent segment: " << toResend.to_string() << endl; // used for [debugging]
 
-                            seq += this->sentLengths[seq]; // increment seq pointer to next segment
+                            if (this->sentLengths.count(seq)) {
+                                seq += this->sentLengths[seq]; // increment seq pointer to next segment
+                            } else {
+                                cout << "Warning: sentLengths missing entry for seq: " << seq << ". Aborting retransmission..." << endl;
+                                break;
+                            }
+                            
                         } else {
                             break;
                         }
@@ -298,6 +315,11 @@ class RDTLayer{
         **/
         void processReceiveAndSendResponse(){
             Segment segmentAck; // Segment acknowledging packet(s) received
+
+            if (!this->sendChannel.has_value()) {
+                cout << "Send channel has not been set" << endl;
+                return;
+            }
 
             //This call returns a list of incoming segments (see Segment class)...
             vector<Segment> listIncommingSegments = (*receiveChannel)->receive();
