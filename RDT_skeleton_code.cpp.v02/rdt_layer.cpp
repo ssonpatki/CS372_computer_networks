@@ -1,7 +1,11 @@
 /*
 Utilized Sources:
     Kurose and Ross, Computer Networking: A Top-Down Approach, 8th Edition, Pearson
-    ChatGPT to better understand the skeleton code and for explanations on error messages
+    ChatGPT used for 
+        1. Better understanding the skeleton code 
+        2. Provide explanations on error messages 
+        3. Minor direction to correct errors (e.g., the infinite recursion error)
+        4. Provide ideas for reasons behind segmentation faults
     Geeks for Geeks (for better understanding RDT):
         1. Reliable Data Transfer (RDT) 1.0
         2. Reliable Data Transfer (RDT) 2.0
@@ -332,15 +336,15 @@ class RDTLayer{
                     string segString = seg.to_string();
                     int seqNum = -1;
                     string payload = "";
-                    size_t seqStart = segString.find("seq: ") + 5;
+                    size_t seqStart = segString.find("seq: ") + 5;  // start reading 5 char after "seq: "
                     size_t seqEnd = segString.find(",", seqStart);
                     size_t dataStart = segString.find("data: ");
 
                     // if fields are found in string (!= npos means != not found)
                     if (seqStart != string::npos && seqEnd != string::npos && dataStart != string::npos) {
                         try {
-                            seqNum = std::stoi(segString.substr(seqStart, seqEnd - seqStart));
-                            payload = segString.substr(dataStart + 6);
+                            seqNum = std::stoi(segString.substr(seqStart, seqEnd - seqStart));  // retrieve substring and convert it into an int
+                            payload = segString.substr(dataStart + 6);  // retrieve substring to get payload data 
                         } catch (...) {
                             cout << "Error parsing segment string: " << segString << endl;
                             continue;
